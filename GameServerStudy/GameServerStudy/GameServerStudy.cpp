@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
 	struct addrinfo hints;
 
 	int iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
+	int iSendResult;
 	char recvBuf[BUFLEN];
 	int recbuflen = BUFLEN;
 
@@ -102,6 +103,40 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	do {
+
+		iResult = recv(ClientSocket , recvBuf , recbuflen , 0);
+
+		if (iResult > 0) {
+			printf("Bytes received : %d \n" , iResult);
+			iSendResult = send( ClientSocket, recvBuf , iResult, 0);
+			
+			if (iSendResult == SOCKET_ERROR) {
+				printf("send faild: %d \n" , WSAGetLastError());
+				closesocket(ClientSocket);
+				WSACleanup();
+				return 1;
+			}
+
+			printf("Byte sent : %d \n" , iSendResult);
+		}
+		else if ( iResult == 0 ) {
+			printf("connection closing");
+		}
+		else {
+			printf("recv faild: %d \n" , WSAGetLastError());
+			closesocket(ClientSocket);
+			WSACleanup();
+			return 1;
+		}
+
+	} while (iResult > 0);
+	// iResult == 0 이 아니면 socket에 뭐가 문제가 있는 것 이므로 이렇게 처리하는 듯
+	// 서버는 어차피 클라이언트 한명만 받는게 아니라 여러명을 받아야 하니까
+
+
+
+
 
 	// 여기서 소켓을 닫는 이유는 아마 클라이언트가 접속 하면 더 이상 
 	// 프로그램이 돌아갈 이유가 없어서 이지 않을까 예측 중임
@@ -112,10 +147,6 @@ int main(int argc, char *argv[])
 	// TODO_LIST 연결은 했는데 서로 데이터 통신이나 이런거 하지 않음 send나 recive 이런거
 	// 내일 좀 더 열심히 해볼 것
 
-
-	MessageBox(NULL, TEXT("소켓 초기화 성공"), TEXT("알림"), MB_OK);
-	
-	
 	closesocket(ListenSocket);
 	WSACleanup();
 
