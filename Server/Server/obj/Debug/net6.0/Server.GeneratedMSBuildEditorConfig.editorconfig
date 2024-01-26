@@ -8,4 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = Server
-build_property.ProjectDir = C:\Games\GameServerStudy\Server\Server\
+build_property.ProjectDir = C:\Users\플밍\OneDrive\바탕 화면\Darkest\GameServerStudy\Server\Server\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 

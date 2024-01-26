@@ -51,9 +51,74 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
+    // addrinfo 의 경우 여러개의 랜카드를 가지고 있거나 ip family 가 달라지는 경우들 도 존재하기 때문에
+    // ai_next를 통해서 그런 addrinfo 를 가지고 와서 처리해야 함 그거를 위한 for 문
 
+    for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
+        
+        ConnectSocket = socket( ptr->ai_family ,ptr->ai_socktype , ptr->ai_protocol );
+        // 여기서 닫아야 하는 줄 알았는데 생각해보니까 닫으면
+        // ai_next 를 돌때 해당 socket 사용 못함
+        // 아 그냥 socket 자체가 안열렸나? 그럴 수 도 있겠네
+        if (ConnectSocket != INVALID_SOCKET) {
+            WSACleanup();
+            return 1;
+        }
+
+        iResult = connect(ConnectSocket, ptr->ai_addr , ptr->ai_addrlen);
+
+
+        if (iResult == SOCKET_ERROR) {
+            closesocket(ConnectSocket);
+            ConnectSocket = INVALID_SOCKET;
+            continue;
+        }
+        break;
     }
 
+    freeaddrinfo(result);
+
+    if ( ConnectSocket == INVALID_SOCKET ) {
+        WSACleanup();
+        return 1;
+    }
+    iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
+    if (iResult == SOCKET_ERROR) {
+
+        closesocket(ConnectSocket);
+        WSACleanup();
+        return 1;
+    }
+
+
+    iResult = shutdown(ConnectSocket , SD_SEND);
+    if (iResult == SOCKET_ERROR) {
+
+        closesocket(ConnectSocket);
+        WSACleanup();
+    }
+
+    do {
+        iResult = recv(ConnectSocket , reciveBuf, recvbufLen , 0);
+
+        if (iResult > 0) {
+            printf("Bytes Received : %d \n" , iResult);
+        }
+        else if (iResult == 0) {
+            printf("connection close");
+        }
+        else {
+            printf("recv Fail with error : %d \n" , WSAGetLastError() );
+        }
+
+
+    } while (iResult == 0);
+
+
+
+    closesocket(ConnectSocket);
+    WSACleanup();
+
+    return 0;
 }
 
