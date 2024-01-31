@@ -35,16 +35,16 @@ int main(int argc, char *argv[])
 	char recvBuf[BUFLEN];
 	int recbuflen = BUFLEN;
 
-
-
 	// 왜 결과값이 인트야? 진짜 이해가 안가...
 	// 아무튼 0아니면 초기화에 문제 있는 것
-	if (iResult != 0 )
+	if (iResult != 0) {
+		
 		return 1;
-
+	}
+		
 	// getaddrinfo 하기전에 소켓 초기화,
 	// 초기화 해야할 어떤 것에 첫번째 주소(pointer) , size
-	ZeroMemory(&hints, sizeof(hints));
+	memset(&hints, 0, sizeof(hints));
 
 	// 4세대 ip
 	hints.ai_family = AF_INET;
@@ -55,14 +55,18 @@ int main(int argc, char *argv[])
 	// 열어놓고 대기 하라는 flag
 	hints.ai_flags = AI_PASSIVE;
 
-
-
 	// 각각 DNS 이름(NAVER , GOOGLE), port번호 , reuslt에 대한 희망 반환형에 대한 힌트?
 	// iResult = getaddrinfo가 정상 작동 했는가 판단 하기 위함
 	// result = getaadrinfo가 정상 작동 해서 DNS를 IP로 변환해서 가지고 오는 것.
 	// 이 경우는 내꺼 찾는 거라 DNS 없어서 NULL 이고 port는 globalKnown port만 피해서 쓰고
 	// hint 주고 결과 result , 그런데 나 포트 연적 없는데.. 흠.. 신기 하네
+	
 	iResult = getaddrinfo(NULL, PORT, &hints, &result);
+
+	if (iResult != 0) {
+		cout << "이상 있음" << endl;
+	}
+	
 
 	// gethostname -> 책이 오래되서 역시 오래된 함수 쓰는 듯
 	// Thread Safe 보장 하지 않고 ipv4 만 지원함
@@ -93,6 +97,7 @@ int main(int argc, char *argv[])
 		WSACleanup();
 		return 1;
 	}
+
 
 	// 클라이언트 접속 수락 이 것을 통해서 서로의 클라이언트 소켓들(서버도 클라 가지고 있음) 끼리
 	// 통신을 시작함 
@@ -133,8 +138,6 @@ int main(int argc, char *argv[])
 	} while (iResult > 0);
 	// iResult == 0 이 아니면 socket에 뭐가 문제가 있는 것 이므로 이렇게 처리하는 듯
 	// 서버는 어차피 클라이언트 한명만 받는게 아니라 여러명을 받아야 하니까
-
-
 
 
 

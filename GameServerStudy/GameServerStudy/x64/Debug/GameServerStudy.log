@@ -1,3 +1,2 @@
 ﻿  GameServerStudy.cpp
-C:\Games\GameServerStudy\GameServerStudy\GameServerStudy\GameServerStudy.cpp(34,7): warning C4101: 'recvBuf' :참조되지 않은 지역 변수입니다.
-  GameServerStudy.vcxproj -> C:\Games\GameServerStudy\GameServerStudy\x64\Debug\GameServerStudy.exe
+  GameServerStudy.vcxproj -> C:\Users\플밍\OneDrive\바탕 화면\Darkest\GameServerStudy\GameServerStudy\x64\Debug\GameServerStudy.exe

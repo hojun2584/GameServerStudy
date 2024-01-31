@@ -57,9 +57,11 @@ int main(int argc, char** argv)
     for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
         
         ConnectSocket = socket( ptr->ai_family ,ptr->ai_socktype , ptr->ai_protocol );
+        
         // 여기서 닫아야 하는 줄 알았는데 생각해보니까 닫으면
         // ai_next 를 돌때 해당 socket 사용 못함
         // 아 그냥 socket 자체가 안열렸나? 그럴 수 도 있겠네
+
         if (ConnectSocket != INVALID_SOCKET) {
             WSACleanup();
             return 1;
