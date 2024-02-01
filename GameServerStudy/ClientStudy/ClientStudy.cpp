@@ -1,10 +1,13 @@
 ﻿#define WIN32_LEAN_AND_MEAN
-
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -37,7 +40,7 @@ int main(int argc, char** argv)
     if (iResult != 0) {
         return 1;
     }
-
+    
     ZeroMemory(&hints , sizeof(hints));
 
     hints.ai_family = AF_UNSPEC;
@@ -62,14 +65,12 @@ int main(int argc, char** argv)
         // ai_next 를 돌때 해당 socket 사용 못함
         // 아 그냥 socket 자체가 안열렸나? 그럴 수 도 있겠네
 
-        if (ConnectSocket != INVALID_SOCKET) {
+        if (ConnectSocket == INVALID_SOCKET) {
             WSACleanup();
             return 1;
         }
 
         iResult = connect(ConnectSocket, ptr->ai_addr , ptr->ai_addrlen);
-
-
         if (iResult == SOCKET_ERROR) {
             closesocket(ConnectSocket);
             ConnectSocket = INVALID_SOCKET;
@@ -79,12 +80,13 @@ int main(int argc, char** argv)
     }
 
     freeaddrinfo(result);
-
     if ( ConnectSocket == INVALID_SOCKET ) {
         WSACleanup();
         return 1;
     }
+
     iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
+
     if (iResult == SOCKET_ERROR) {
 
         closesocket(ConnectSocket);
@@ -100,11 +102,18 @@ int main(int argc, char** argv)
         WSACleanup();
     }
 
-    do {
-        iResult = recv(ConnectSocket , reciveBuf, recvbufLen , 0);
+    string recvBuf;
 
+    do {
+        char buffer[DEFAULT_BUFLEN];
+
+        
         if (iResult > 0) {
             printf("Bytes Received : %d \n" , iResult);
+            
+            recvBuf = recv(ConnectSocket, buffer, DEFAULT_BUFLEN - 1, 0);
+            cout << "String receoved:\n" << recvBuf.c_str() << endl;
+
         }
         else if (iResult == 0) {
             printf("connection close");
@@ -112,7 +121,6 @@ int main(int argc, char** argv)
         else {
             printf("recv Fail with error : %d \n" , WSAGetLastError() );
         }
-
 
     } while (iResult == 0);
 

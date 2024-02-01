@@ -13,8 +13,6 @@ int main(int argc, char *argv[])
 {
 
 	WSADATA wsaData;
-	
-
 	// 1. 윈도우 공식 문서는 왜 변수인데 대문자 시작이지??
 	// 이건 아직도 잘 모르겠음 그냥 라이브러리마다 그럴 수 있다는데 이해하기 힘드네..
 	// 2. SOCKET은 왜 대문자인가 => 런타임 변하지 않음. 그렇기에 사실상 상수 취급으로 인한
@@ -61,34 +59,40 @@ int main(int argc, char *argv[])
 	// 이 경우는 내꺼 찾는 거라 DNS 없어서 NULL 이고 port는 globalKnown port만 피해서 쓰고
 	// hint 주고 결과 result , 그런데 나 포트 연적 없는데.. 흠.. 신기 하네
 	
-	iResult = getaddrinfo(NULL, PORT, &hints, &result);
 
+	iResult = getaddrinfo(NULL, PORT, &hints, &result);
+	
 	if (iResult != 0) {
 		cout << "이상 있음" << endl;
 	}
 	
 
-	// gethostname -> 책이 오래되서 역시 오래된 함수 쓰는 듯
-	// Thread Safe 보장 하지 않고 ipv4 만 지원함
-	// 공식 문서를 가까이 하고 책은 기초만 배우도록 하자...
-	// 최신 버전 winsoc는 getaddrinfo 를 권장하고 있음
+	//// gethostname -> 책이 오래되서 역시 오래된 함수 쓰는 듯
+	//// Thread Safe 보장 하지 않고 ipv4 만 지원함
+	//// 공식 문서를 가까이 하고 책은 기초만 배우도록 하자...
+	//// 최신 버전 winsoc는 getaddrinfo 를 권장하고 있음
 
 
 
-	// bind -> listen -> accept  로 아는데
-	// 왜 공식에서 listen -> bind 하는 거지? 이해가 안가네
-
-	iResult = bind( ListenSocket,result->ai_addr, (int)result->ai_addrlen );
-	if (iResult == INVALID_SOCKET)
-		return 1;
-
+	//// bind -> listen -> accept
 	// clinet의 접속을 듣기 위한 소켓 생성
+	// listen 함수의 호출이 아님을 명심할 것
+	
 	ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 	if (ListenSocket == INVALID_SOCKET)
 		return 1;
 
+
+	iResult = bind( ListenSocket,result->ai_addr, (int)result->ai_addrlen );
+	if (iResult == INVALID_SOCKET) {
+
+		cout << "invalid_soc" << endl;
+		return 1;
+	}
+
 	// 반복자 패턴에 근거한 메모리 해제인가?
 	freeaddrinfo(result);
+
 
 	// 들어라! 접속을
 	iResult = listen(ListenSocket, SOMAXCONN);
@@ -99,8 +103,10 @@ int main(int argc, char *argv[])
 	}
 
 
+	cout << "listen" << endl;
 	// 클라이언트 접속 수락 이 것을 통해서 서로의 클라이언트 소켓들(서버도 클라 가지고 있음) 끼리
 	// 통신을 시작함 
+
 	ClientSocket = accept(ListenSocket, NULL, NULL);
 	if (ClientSocket == INVALID_SOCKET) {
 		closesocket(ListenSocket);
@@ -108,10 +114,12 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	cout << "accept" << endl;
+
 	do {
-
+		
 		iResult = recv(ClientSocket , recvBuf , recbuflen , 0);
-
+		
 		if (iResult > 0) {
 			printf("Bytes received : %d \n" , iResult);
 			iSendResult = send( ClientSocket, recvBuf , iResult, 0);
@@ -136,15 +144,15 @@ int main(int argc, char *argv[])
 		}
 
 	} while (iResult > 0);
+
 	// iResult == 0 이 아니면 socket에 뭐가 문제가 있는 것 이므로 이렇게 처리하는 듯
 	// 서버는 어차피 클라이언트 한명만 받는게 아니라 여러명을 받아야 하니까
-
-
 
 	// 여기서 소켓을 닫는 이유는 아마 클라이언트가 접속 하면 더 이상 
 	// 프로그램이 돌아갈 이유가 없어서 이지 않을까 예측 중임
 	// 서버의 이용자가 다중이어야 할 경우 listen 소켓은 계속 열려 있고
 	// accept가 주는 socket을 Thread에서 돌릴 경우 많은 이용자가 사용하는 서버 구축이 가능하지 않을까 추측해봄
+
 	closesocket(ListenSocket);
 
 	// TODO_LIST 연결은 했는데 서로 데이터 통신이나 이런거 하지 않음 send나 recive 이런거
