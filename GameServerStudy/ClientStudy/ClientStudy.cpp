@@ -15,14 +15,14 @@ using namespace std;
 #pragma comment (lib, "AdvApi32.lib")
 
 
-#define DEFAULT_BUFLEN 512
+#define BUFLEN 512
 #define DEFAULT_PORT "3210"
 
 int main(int argc, char** argv)
 {
     WSADATA wsaData;
 
-    SOCKET ConnectSocket = INVALID_SOCKET;
+    SOCKET connectSocket = INVALID_SOCKET;
 
     addrinfo* ptr = NULL;
     addrinfo* result = NULL;
@@ -30,10 +30,12 @@ int main(int argc, char** argv)
 
     const char* sendbuf = "this is test";
 
-    char reciveBuf[DEFAULT_BUFLEN];
+    char reciveBuf[BUFLEN];
+    char message[BUFLEN];
+
 
     int iResult;
-    int recvbufLen = DEFAULT_BUFLEN;
+    int recvbufLen = BUFLEN;
 
     iResult = WSAStartup(MAKEWORD(2,2),&wsaData);
 
@@ -59,74 +61,111 @@ int main(int argc, char** argv)
 
     for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
         
-        ConnectSocket = socket( ptr->ai_family ,ptr->ai_socktype , ptr->ai_protocol );
+        connectSocket = socket( ptr->ai_family ,ptr->ai_socktype , ptr->ai_protocol );
         
         // 여기서 닫아야 하는 줄 알았는데 생각해보니까 닫으면
         // ai_next 를 돌때 해당 socket 사용 못함
         // 아 그냥 socket 자체가 안열렸나? 그럴 수 도 있겠네
 
-        if (ConnectSocket == INVALID_SOCKET) {
+        if (connectSocket == INVALID_SOCKET) {
             WSACleanup();
             return 1;
         }
 
-        iResult = connect(ConnectSocket, ptr->ai_addr , ptr->ai_addrlen);
+        iResult = connect(connectSocket, ptr->ai_addr , ptr->ai_addrlen);
         if (iResult == SOCKET_ERROR) {
-            closesocket(ConnectSocket);
-            ConnectSocket = INVALID_SOCKET;
+            closesocket(connectSocket);
+            connectSocket = INVALID_SOCKET;
             continue;
         }
         break;
     }
 
     freeaddrinfo(result);
-    if ( ConnectSocket == INVALID_SOCKET ) {
+    if ( connectSocket == INVALID_SOCKET ) {
         WSACleanup();
         return 1;
     }
 
-    iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
-
     if (iResult == SOCKET_ERROR) {
 
-        closesocket(ConnectSocket);
+        closesocket(connectSocket);
         WSACleanup();
         return 1;
     }
 
 
-    iResult = shutdown(ConnectSocket , SD_SEND);
-    if (iResult == SOCKET_ERROR) {
-
-        closesocket(ConnectSocket);
-        WSACleanup();
-    }
-
+    
     string recvBuf;
+    char writeBuf[BUFLEN];
+    int strLen;
 
-    do {
-        char buffer[DEFAULT_BUFLEN];
+
+
+    while (true) {
+
+        fputs("Input message(q to quit) : " , stdout);
+        fgets( message , BUFLEN , stdin);
+
+        if (!strcmp(message , "Q") || !strcmp(message, "q")) {
+            cout << "end" << endl;
+            break;
+        }
+
+        send(connectSocket , message , BUFLEN , 0);
+         
+        // 이거 -1 은 오류비트 체크인가? 음~ 그건 아닌거 같은데..
+        //strLen = recv(connectSocket , message , BUFLEN-1 , 0);
+        
+        while (true) {
+            recv(connectSocket, message, strlen(message), 0);
+            if (((string)message).find("\n") != string::npos)
+                break;
+        }
+        //strLen = recv(connectSocket, message, strlen(message), 0);
+        cout << message << endl;
+        
+        ZeroMemory(writeBuf , BUFLEN);
+
+        //printf("message from server : %s" , message);
+
+    }
+
+
+
 
         
-        if (iResult > 0) {
-            printf("Bytes Received : %d \n" , iResult);
-            
-            recvBuf = recv(ConnectSocket, buffer, DEFAULT_BUFLEN - 1, 0);
-            cout << "String receoved:\n" << recvBuf.c_str() << endl;
 
-        }
-        else if (iResult == 0) {
-            printf("connection close");
-        }
-        else {
-            printf("recv Fail with error : %d \n" , WSAGetLastError() );
-        }
+    //do {
+    //    
 
-    } while (iResult == 0);
+    //    
+    //    if (iResult > 0) {
+    //        printf("Bytes Received : %d \n" , iResult);
+    //        
+    //        recvBuf = recv(ConnectSocket, buffer, DEFAULT_BUFLEN - 1, 0);
+    //        cout << "String receoved:\n" << recvBuf.c_str() << endl;
+
+    //    }
+    //    else if (iResult == 0) {
+    //        printf("connection close");
+    //    }
+    //    else {
+    //        printf("recv Fail with error : %d \n" , WSAGetLastError() );
+    //    }
+
+    //} while (iResult == 0);
+
+    iResult = shutdown(connectSocket, SD_SEND);
+    if (iResult == SOCKET_ERROR) {
+
+        closesocket(connectSocket);
+        WSACleanup();
+    }
 
 
 
-    closesocket(ConnectSocket);
+    closesocket(connectSocket);
     WSACleanup();
 
     return 0;

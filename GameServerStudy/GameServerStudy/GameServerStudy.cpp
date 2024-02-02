@@ -1,9 +1,9 @@
 ﻿#pragma comment(lib,"ws2_32")
 #include <iostream>
+#include <string>
 #include <WinSock2.h>
 #include <ws2tcpip.h>
 #include <memory>
-using namespace std;
 
 
 #define PORT	"3210"
@@ -27,6 +27,8 @@ int main(int argc, char *argv[])
 	// c++ 과 c 언어의 호환성을 위해서 struct 붙여둔 것으로 판단됨.
 	struct addrinfo* result = NULL;
 	struct addrinfo hints;
+
+
 
 	int iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
 	int iSendResult;
@@ -59,24 +61,20 @@ int main(int argc, char *argv[])
 	// 이 경우는 내꺼 찾는 거라 DNS 없어서 NULL 이고 port는 globalKnown port만 피해서 쓰고
 	// hint 주고 결과 result , 그런데 나 포트 연적 없는데.. 흠.. 신기 하네
 	
-
 	iResult = getaddrinfo(NULL, PORT, &hints, &result);
 	
 	if (iResult != 0) {
-		cout << "이상 있음" << endl;
+		std::cout << "이상 있음" << std::endl;
 	}
 	
+	// gethostname -> 책이 오래되서 역시 오래된 함수 쓰는 듯
+	// Thread Safe 보장 하지 않고 ipv4 만 지원함
+	// 공식 문서를 가까이 하고 책은 기초만 배우도록 하자...
+	// 최신 버전 winsoc는 getaddrinfo 를 권장하고 있음
 
-	//// gethostname -> 책이 오래되서 역시 오래된 함수 쓰는 듯
-	//// Thread Safe 보장 하지 않고 ipv4 만 지원함
-	//// 공식 문서를 가까이 하고 책은 기초만 배우도록 하자...
-	//// 최신 버전 winsoc는 getaddrinfo 를 권장하고 있음
-
-
-
-	//// bind -> listen -> accept
+	// bind -> listen -> accept
 	// clinet의 접속을 듣기 위한 소켓 생성
-	// listen 함수의 호출이 아님을 명심할 것
+	// listen() 함수의 호출이 아님을 명심할 것
 	
 	ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 	if (ListenSocket == INVALID_SOCKET)
@@ -86,7 +84,6 @@ int main(int argc, char *argv[])
 	iResult = bind( ListenSocket,result->ai_addr, (int)result->ai_addrlen );
 	if (iResult == INVALID_SOCKET) {
 
-		cout << "invalid_soc" << endl;
 		return 1;
 	}
 
@@ -101,9 +98,7 @@ int main(int argc, char *argv[])
 		WSACleanup();
 		return 1;
 	}
-
-
-	cout << "listen" << endl;
+	
 	// 클라이언트 접속 수락 이 것을 통해서 서로의 클라이언트 소켓들(서버도 클라 가지고 있음) 끼리
 	// 통신을 시작함 
 
@@ -114,9 +109,59 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	cout << "accept" << endl;
+	std::cout << "Connecting..." << std::endl;
+	int strLength;
+	char message[BUFLEN];
+	ZeroMemory(message , sizeof(message));
 
-	do {
+	std::string messageFormat;
+	int temp;
+	int recvResult;
+
+	while( true )
+	{
+		recvResult = recv(ClientSocket, message, BUFLEN, 0);
+
+		if (recvResult == 0 || recvResult == INVALID_SOCKET)
+			break;
+
+		messageFormat = message;
+		
+		int temp;
+		try
+		{
+			temp = stoi(messageFormat);
+		}
+		catch (std::exception e) {
+
+			strcpy_s(message , "정상적인 입력이 아닙니다. 다시 입력해주세요.\n");
+			strLength = strlen(message);
+
+			std::cout << message << std::endl;
+			send(ClientSocket, message, BUFLEN, 0);
+			
+			continue;
+		}
+			
+		std::cout << "int : " << temp << std::endl;
+
+
+		std::cout << "message : " << message << std::endl;
+
+		// 뒤에 쓰레기 값 적혀 있는 버퍼 잘라서 출력하는 부분
+		//cout << messageFormat.substr(0, messageFormat.find("\n")) << endl;
+		
+
+
+		send(ClientSocket, message , strlen(message), 0);
+		ZeroMemory(message , sizeof(message) );
+	}
+	
+
+
+	std::cout << "check" << std::endl;
+
+	/*do {
 		
 		iResult = recv(ClientSocket , recvBuf , recbuflen , 0);
 		
@@ -143,7 +188,7 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 
-	} while (iResult > 0);
+	} while (iResult > 0);*/
 
 	// iResult == 0 이 아니면 socket에 뭐가 문제가 있는 것 이므로 이렇게 처리하는 듯
 	// 서버는 어차피 클라이언트 한명만 받는게 아니라 여러명을 받아야 하니까

@@ -1,2 +1,7 @@
 ﻿  GameServerStudy.cpp
-  GameServerStudy.vcxproj -> C:\Games\GameServerStudy\GameServerStudy\x64\Debug\GameServerStudy.exe
+C:\Users\플밍\OneDrive\바탕 화면\Darkest\GameServerStudy\GameServerStudy\GameServerStudy\GameServerStudy.cpp(138,22): warning C4267: '=': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\플밍\OneDrive\바탕 화면\Darkest\GameServerStudy\GameServerStudy\GameServerStudy\GameServerStudy.cpp(156,38): warning C4267: '인수': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\플밍\OneDrive\바탕 화면\Darkest\GameServerStudy\GameServerStudy\GameServerStudy\GameServerStudy.cpp(118,6): warning C4101: 'temp' :참조되지 않은 지역 변수입니다.
+C:\Users\플밍\OneDrive\바탕 화면\Darkest\GameServerStudy\GameServerStudy\GameServerStudy\GameServerStudy.cpp(35,7): warning C4101: 'recvBuf' :참조되지 않은 지역 변수입니다.
+C:\Users\플밍\OneDrive\바탕 화면\Darkest\GameServerStudy\GameServerStudy\GameServerStudy\GameServerStudy.cpp(34,6): warning C4101: 'iSendResult' :참조되지 않은 지역 변수입니다.
+  GameServerStudy.vcxproj -> C:\Users\플밍\OneDrive\바탕 화면\Darkest\GameServerStudy\GameServerStudy\x64\Debug\GameServerStudy.exe
